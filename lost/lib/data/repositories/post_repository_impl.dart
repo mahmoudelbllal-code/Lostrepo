@@ -1,0 +1,130 @@
+import '../../domain/entities/post.dart';
+import '../../domain/entities/search_result.dart';
+import '../../domain/repositories/post_repository.dart';
+import '../../core/errors/exceptions.dart';
+import '../../core/errors/failures.dart';
+import '../datasources/post_remote_data_source.dart';
+import '../models/post_model.dart';
+
+/// Post Repository Implementation - Data Layer
+class PostRepositoryImpl implements PostRepository {
+  final PostRemoteDataSource remoteDataSource;
+
+  PostRepositoryImpl({required this.remoteDataSource});
+
+  @override
+  Future<Either<Failure, Post>> createPost({
+    required String title,
+    required String description,
+    required String category,
+    required String postType,
+    required String imagePath,
+    String? location,
+  }) async {
+    try {
+      final post = await remoteDataSource.createPost(
+        title: title,
+        description: description,
+        category: category,
+        postType: postType,
+        imagePath: imagePath,
+        location: location,
+      );
+      return Either.right(post);
+    } on ServerException catch (e) {
+      return Either.left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Either.left(NetworkFailure(e.message));
+    } catch (e) {
+      return Either.left(ServerFailure('Unexpected error: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Post>> getPostById(String postId) async {
+    try {
+      final post = await remoteDataSource.getPostById(postId);
+      return Either.right(post);
+    } on ServerException catch (e) {
+      return Either.left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Either.left(NetworkFailure(e.message));
+    } catch (e) {
+      return Either.left(ServerFailure('Unexpected error: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Post>>> getAllPosts() async {
+    try {
+      final posts = await remoteDataSource.getAllPosts();
+      return Either.right(posts);
+    } on ServerException catch (e) {
+      return Either.left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Either.left(NetworkFailure(e.message));
+    } catch (e) {
+      return Either.left(ServerFailure('Unexpected error: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Post>>> getUserPosts(String userId) async {
+    try {
+      final posts = await remoteDataSource.getUserPosts(userId);
+      return Either.right(posts);
+    } on ServerException catch (e) {
+      return Either.left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Either.left(NetworkFailure(e.message));
+    } catch (e) {
+      return Either.left(ServerFailure('Unexpected error: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<SearchResult>>> searchByImage(
+    String imagePath,
+  ) async {
+    try {
+      final results = await remoteDataSource.searchByImage(imagePath);
+      return Either.right(results);
+    } on ServerException catch (e) {
+      return Either.left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Either.left(NetworkFailure(e.message));
+    } catch (e) {
+      return Either.left(ServerFailure('Unexpected error: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Post>> updatePost(Post post) async {
+    try {
+      final updatedPost = await remoteDataSource.updatePost(
+        PostModel.fromEntity(post),
+      );
+      return Either.right(updatedPost);
+    } on ServerException catch (e) {
+      return Either.left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Either.left(NetworkFailure(e.message));
+    } catch (e) {
+      return Either.left(ServerFailure('Unexpected error: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deletePost(String postId) async {
+    try {
+      await remoteDataSource.deletePost(postId);
+      return Either.right(null);
+    } on ServerException catch (e) {
+      return Either.left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Either.left(NetworkFailure(e.message));
+    } catch (e) {
+      return Either.left(ServerFailure('Unexpected error: $e'));
+    }
+  }
+}

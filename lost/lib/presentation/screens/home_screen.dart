@@ -1,0 +1,437 @@
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:io';
+import '../widgets/post_card.dart';
+import '../../domain/entities/post.dart';
+import '../../core/constants/api_endpoints.dart';
+
+/// Home Screen - Suggested Posts
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  bool isDarkMode = false;
+  bool _isLoading = true;
+  bool _hasError = false;
+  String _errorMessage = '';
+  List<Post> _posts = [];
+
+  // Fallback mock data (shown when backend is unavailable)
+  final List<Post> _mockPosts = [
+    Post(
+      id: '1',
+      userId: 'user1',
+      title: 'Pink Quilted Wallet',
+      description: 'Found this beautiful pink wallet in Central Park',
+      category: 'Wallet',
+      postType: 'found',
+      imageUrl:
+          'https://images.unsplash.com/photo-1627123424574-724758594e93?w=500',
+      location: 'Central Park, NY',
+      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+    ),
+    Post(
+      id: '2',
+      userId: 'user2',
+      title: 'Stuffed Bear Toy',
+      description: 'Lost my child\'s favorite teddy bear at the library',
+      category: 'Other',
+      postType: 'lost',
+      imageUrl:
+          'https://images.unsplash.com/photo-1519897831810-a9a01aceccd1?w=500',
+      location: 'Main Street Library',
+      createdAt: DateTime.now().subtract(const Duration(hours: 5)),
+    ),
+    Post(
+      id: '3',
+      userId: 'user3',
+      title: 'Leather Travel Pouch',
+      description: 'Found this brown leather bag at the terminal',
+      category: 'Bag',
+      postType: 'found',
+      imageUrl:
+          'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=500',
+      location: 'Terminal 4',
+      createdAt: DateTime.now().subtract(const Duration(days: 1)),
+    ),
+    Post(
+      id: '4',
+      userId: 'user4',
+      title: 'Blue Backpack',
+      description: 'Found this backpack at the gym area',
+      category: 'Bag',
+      postType: 'found',
+      imageUrl:
+          'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500',
+      location: 'City Gym',
+      createdAt: DateTime.now().subtract(const Duration(days: 1, hours: 3)),
+    ),
+    Post(
+      id: '5',
+      userId: 'user5',
+      title: 'iPhone with Red Case',
+      description: 'Lost my iPhone 13 with a red silicone case',
+      category: 'Phone',
+      postType: 'lost',
+      imageUrl:
+          'https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=500',
+      location: 'Starbucks Times Square',
+      createdAt: DateTime.now().subtract(const Duration(days: 2)),
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPosts();
+  }
+
+  Future<void> _fetchPosts() async {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+    });
+
+    try {
+      final response = await http
+          .get(Uri.parse('${ApiEndpoints.baseUrl}${ApiEndpoints.getPosts}'))
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final List<dynamic> postsJson = data['posts'] ?? [];
+
+        if (postsJson.isEmpty) {
+          // Backend is working but no posts - show mock data
+          setState(() {
+            _posts = _mockPosts;
+            _isLoading = false;
+          });
+          return;
+        }
+
+        // Parse backend posts
+        final List<Post> backendPosts = postsJson.map((json) {
+          return Post(
+            id: json['id'] ?? '',
+            userId: json['user_id'] ?? 'unknown',
+            title: json['title'] ?? '',
+            description: json['description'] ?? '',
+            category: json['category'] ?? 'Other',
+            postType: json['post_type'] ?? 'lost',
+            imageUrl: json['image_url'] ?? '',
+            location: json['location'],
+            createdAt: json['created_at'] != null
+                ? DateTime.parse(json['created_at'])
+                : DateTime.now(),
+          );
+        }).toList();
+
+        setState(() {
+          _posts = backendPosts;
+          _isLoading = false;
+        });
+      } else {
+        // Backend returned error - use mock data
+        setState(() {
+          _posts = _mockPosts;
+          _isLoading = false;
+        });
+      }
+    } on SocketException {
+      // No internet/backend - use mock data
+      setState(() {
+        _posts = _mockPosts;
+        _isLoading = false;
+        _errorMessage = 'Using offline data (backend not available)';
+      });
+    } catch (e) {
+      // Any other error - use mock data
+      setState(() {
+        _posts = _mockPosts;
+        _isLoading = false;
+        _errorMessage = 'Using offline data';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Colors.black, size: 28),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+          ),
+        ),
+        actions: [
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: Colors.black,
+                  size: 28,
+                ),
+                onPressed: () {
+                  Navigator.pushNamed(context, '/notifications');
+                },
+              ),
+              Positioned(
+                right: 12,
+                top: 12,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      drawer: Drawer(
+        backgroundColor: Colors.white,
+        child: SafeArea(
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+
+              // Drawer Menu Items
+              _buildDrawerItem(
+                icon: Icons.settings_outlined,
+                title: 'Privacy Settings',
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/settings');
+                },
+              ),
+
+              _buildDrawerItem(
+                icon: Icons.flag_outlined,
+                title: 'Report a problem',
+                onTap: () {
+                  Navigator.pop(context);
+                  // TODO: Navigate to report problem
+                },
+              ),
+
+              _buildDrawerItem(
+                icon: Icons.logout,
+                title: 'Log Out',
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/login',
+                    (route) => false,
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header Section
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Text(
+                            'Suggested ',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                              height: 1.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Text(
+                        'posts !',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          fontStyle: FontStyle.italic,
+                          color: Color(0xFFB8956A),
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                      size: 20,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Subtitle
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+              child: Text(
+                'Found items matching your description',
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              ),
+            ),
+
+            // Posts List
+            Expanded(
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF8B7355),
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _fetchPosts,
+                      color: const Color(0xFF8B7355),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        itemCount: _posts.length,
+                        itemBuilder: (context, index) {
+                          final post = _posts[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 20),
+                            child: PostCard(
+                              post: post,
+                              backgroundColor: _getCardBackgroundColor(index),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Container(
+        height: 80,
+        decoration: BoxDecoration(
+          color: const Color(0xFF8B7355),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildNavButton(Icons.home, true, () {}),
+
+            _buildNavButton(Icons.chat_bubble_outline, false, () {
+              Navigator.pushNamed(context, '/chat');
+            }),
+            _buildNavButton(Icons.file_upload_outlined, false, () {
+              Navigator.pushNamed(context, '/create-post');
+            }),
+            _buildNavButton(Icons.person, false, () {
+              Navigator.pushNamed(context, '/profile');
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey[300]!, width: 1),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: const Color(0xFFA0826D)),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavButton(IconData icon, bool isActive, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: isActive ? Colors.white : Colors.transparent,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          icon,
+          color: isActive ? const Color(0xFF8B7355) : Colors.white,
+          size: 28,
+        ),
+      ),
+    );
+  }
+
+  Color _getCardBackgroundColor(int index) {
+    final colors = [
+      const Color(0xFFFFD6D6), // Pink for first item
+      const Color(0xFFE8E8E8), // Gray for second item
+      const Color(0xFFF5E6D3), // Beige for third item
+      const Color(0xFFE8E8E8), // Gray
+      const Color(0xFFFFD6D6), // Pink
+    ];
+    return colors[index % colors.length];
+  }
+}
