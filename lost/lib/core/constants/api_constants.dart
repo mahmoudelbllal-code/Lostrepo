@@ -1,7 +1,18 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+
 /// API Configuration Constants
 class ApiConstants {
   // Base URL - Update this with your Flask backend URL
-  static const String baseUrl = 'http://localhost:5000/api';
+  static String get baseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:5000/api';
+    } else if (Platform.isAndroid) {
+      return 'http://10.0.2.2:5000/api';
+    } else {
+      return 'http://localhost:5000/api';
+    }
+  }
 
   // API Endpoints
   static const String uploadEndpoint = '/upload';

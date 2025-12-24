@@ -26,6 +26,7 @@ vector_db_service = VectorDBService()
 posts_db = {
     'pink-wallet-001': {
         'id': 'pink-wallet-001',
+        'user_id': 'static_user',
         'title': 'Pink Quilted Wallet',
         'description': 'Found this beautiful pink wallet in Central Park near the fountain',
         'category': 'Wallet',
@@ -38,6 +39,7 @@ posts_db = {
     },
     'teddy-bear-002': {
         'id': 'teddy-bear-002',
+        'user_id': 'static_user',
         'title': 'Brown Teddy Bear',
         'description': 'Lost my child\'s favorite teddy bear at the library reading area',
         'category': 'Other',
@@ -50,6 +52,7 @@ posts_db = {
     },
     'leather-bag-003': {
         'id': 'leather-bag-003',
+        'user_id': 'static_user',
         'title': 'Leather Travel Pouch',
         'description': 'Found this brown leather bag at the airport terminal near gate B4',
         'category': 'Bag',
@@ -62,6 +65,7 @@ posts_db = {
     },
     'blue-backpack-004': {
         'id': 'blue-backpack-004',
+        'user_id': 'static_user',
         'title': 'Blue Backpack',
         'description': 'Found this blue backpack at the gym locker area',
         'category': 'Bag',
@@ -74,6 +78,7 @@ posts_db = {
     },
     'iphone-red-005': {
         'id': 'iphone-red-005',
+        'user_id': 'static_user',
         'title': 'iPhone with Red Case',
         'description': 'Lost my iPhone 13 with a red silicone case at the coffee shop',
         'category': 'Phone',
