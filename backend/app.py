@@ -252,6 +252,100 @@ def get_all_posts():
     }), 200
 
 
+@app.route('/api/search', methods=['POST'])
+def search_by_image():
+    """
+    Search for items using an image.
+    Enhancements:
+    - Zero-Shot Classification to identify item type.
+    - Bidirectional search (checks both Lost and Found).
+    """
+    try:
+        print("\n" + "="*60)
+        print("🔍 Received image search request")
+        print("="*60)
+        
+        # Validate image file
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file provided'}), 400
+        
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
+        
+        if not allowed_file(file.filename):
+            return jsonify({'error': 'Invalid file type'}), 400
+        
+        # Generate unique ID for temp file
+        filename = secure_filename(f"search_{uuid.uuid4()}_{file.filename}")
+        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        
+        # Save file temporarily
+        file.save(file_path)
+        
+        # Generate embedding
+        print(f"🤖 Generating embedding for search...")
+        embedding = ai_service.generate_embedding(file_path)
+        
+        # 🧠 ENHANCEMENT: Predict Category
+        categories = ['Wallet', 'Phone', 'Keys', 'Bag', 'Electronics', 'Documents', 'Jewelry', 'Clothing', 'Other']
+        detected_category, confidence = ai_service.predict_category(embedding, categories)
+        print(f"👁️  AI Detected: {detected_category} ({confidence:.1f}%)")
+        
+        # Search in vector DB
+        # Searching ALL posts (post_type=None) to find both lost and found matches
+        matches = vector_db_service.search_similar(
+            embedding=embedding,
+            post_type=None, # Search everything
+            top_k=20,
+            min_similarity=0.65 # Increased threshold slightly for better precision
+        )
+        
+        # Format results
+        results = []
+        for match in matches:
+            # Get full post details from static DB
+            post = posts_db.get(match['post_id'])
+            if post:
+                # Add category match indicator
+                is_category_match = post['category'].lower() == detected_category.lower()
+                
+                results.append({
+                    'post': {
+                        'id': post['id'],
+                        'user_id': 'static_user', # Placeholder
+                        'title': post['title'],
+                        'description': post['description'],
+                        'category': post['category'],
+                        'post_type': post['post_type'],
+                        'image_url': post['image_url'],
+                        'location': post['location'],
+                        'created_at': post['created_at'],
+                        'updated_at': None
+                    },
+                    'similarity': float(match['similarity']),
+                    'ai_tag': detected_category if is_category_match else None
+                })
+        
+        print(f"✨ Found {len(results)} matches")
+        
+        # Clean up
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            
+        return jsonify({
+            'results': results,
+            'detected_category': detected_category,
+            'confidence': confidence
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error during search: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/uploads/<filename>')
 def serve_upload(filename):
     """Serve uploaded files for local testing"""

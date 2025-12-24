@@ -68,3 +68,48 @@ class AIService:
         similarity = np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
         
         return float(similarity)
+
+    def predict_category(self, image_embedding, categories):
+        """
+        Predict the category of an image using Zero-Shot classification
+        
+        Args:
+            image_embedding (list): Image embedding vector
+            categories (list): List of category names (e.g. ['Wallet', 'Phone'])
+            
+        Returns:
+            tuple: (best_category, confidence_score)
+        """
+        try:
+            # Tokenize categories
+            # Use 'a photo of a X' prompt engineering for better accuracy
+            text_inputs = torch.cat([clip.tokenize(f"a photo of a {c}") for c in categories]).to(self.device)
+            
+            # Encode text
+            with torch.no_grad():
+                text_features = self.model.encode_text(text_inputs)
+                text_features /= text_features.norm(dim=-1, keepdim=True)
+            
+            # Convert image embedding back to tensor if needed
+            if isinstance(image_embedding, list):
+                image_features = torch.tensor(image_embedding).to(self.device)
+            else:
+                image_features = image_embedding
+                
+            # Ensure shape is (1, 512)
+            if len(image_features.shape) == 1:
+                image_features = image_features.unsqueeze(0)
+            
+            # Compute similarity (dot product since normalized)
+            # Softmax to get probabilities
+            similarity = (100.0 * image_features @ text_features.T).softmax(dim=-1)
+            values, indices = similarity[0].topk(1)
+            
+            best_idx = indices[0].item()
+            confidence = values[0].item()
+            
+            return categories[best_idx], confidence
+            
+        except Exception as e:
+            print(f"⚠️ Classification error: {e}")
+            return categories[0], 0.0

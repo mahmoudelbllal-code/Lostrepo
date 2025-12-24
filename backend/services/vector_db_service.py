@@ -63,13 +63,13 @@ class VectorDBService:
         except Exception as e:
             raise Exception(f"Failed to upsert embedding: {str(e)}")
     
-    def search_similar(self, embedding, post_type, top_k=10, min_similarity=0.60):
+    def search_similar(self, embedding, post_type=None, top_k=10, min_similarity=0.60):
         """
         Search for similar items in the vector database
         
         Args:
             embedding (list): Query embedding vector
-            post_type (str): Type of the query post ('lost' or 'found')
+            post_type (str, optional): Type of the query post ('lost' or 'found'). If None, searches all.
             top_k (int): Number of results to return
             min_similarity (float): Minimum similarity threshold (0-1)
         
@@ -77,18 +77,21 @@ class VectorDBService:
             list: List of matching posts with similarity scores
         """
         try:
-            # Search for opposite type (lost searches found, found searches lost)
-            opposite_type = 'found' if post_type == 'lost' else 'lost'
+            search_filter = None
             
-            # Create filter for post type
-            search_filter = Filter(
-                must=[
-                    FieldCondition(
-                        key="post_type",
-                        match=MatchValue(value=opposite_type)
-                    )
-                ]
-            )
+            if post_type:
+                # Search for opposite type (lost searches found, found searches lost)
+                opposite_type = 'found' if post_type == 'lost' else 'lost'
+                
+                # Create filter for post type
+                search_filter = Filter(
+                    must=[
+                        FieldCondition(
+                            key="post_type",
+                            match=MatchValue(value=opposite_type)
+                        )
+                    ]
+                )
             
             # Perform search using query_points (newer Qdrant API)
             try:
