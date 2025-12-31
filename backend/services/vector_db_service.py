@@ -63,13 +63,14 @@ class VectorDBService:
         except Exception as e:
             raise Exception(f"Failed to upsert embedding: {str(e)}")
     
-    def search_similar(self, embedding, post_type, top_k=10, min_similarity=0.60):
+    def search_similar(self, embedding, post_type, category=None, top_k=10, min_similarity=0.60):
         """
         Search for similar items in the vector database
         
         Args:
             embedding (list): Query embedding vector
             post_type (str): Type of the query post ('lost' or 'found')
+            category (str, optional): Filter by category (e.g., 'Wallet', 'Phone', 'Bag')
             top_k (int): Number of results to return
             min_similarity (float): Minimum similarity threshold (0-1)
         
@@ -80,15 +81,26 @@ class VectorDBService:
             # Search for opposite type (lost searches found, found searches lost)
             opposite_type = 'found' if post_type == 'lost' else 'lost'
             
-            # Create filter for post type
-            search_filter = Filter(
-                must=[
+            # Build filter conditions - CATEGORY FIRST for efficiency
+            filter_conditions = [
+                FieldCondition(
+                    key="post_type",
+                    match=MatchValue(value=opposite_type)
+                )
+            ]
+            
+            # Add category filter if provided (reduces search space)
+            if category:
+                filter_conditions.append(
                     FieldCondition(
-                        key="post_type",
-                        match=MatchValue(value=opposite_type)
+                        key="category",
+                        match=MatchValue(value=category)
                     )
-                ]
-            )
+                )
+                print(f"🔍 Filtering by category: {category}")
+            
+            # Create combined filter
+            search_filter = Filter(must=filter_conditions)
             
             # Perform search using query_points (newer Qdrant API)
             try:
@@ -98,7 +110,6 @@ class VectorDBService:
                     query=embedding,
                     limit=top_k,
                     query_filter=search_filter,
-                    score_threshold=min_similarity,
                     with_payload=True
                 ).points
             except AttributeError:
@@ -108,19 +119,25 @@ class VectorDBService:
                     query_vector=embedding,
                     limit=top_k,
                     query_filter=search_filter,
-                    score_threshold=min_similarity,
                     with_payload=True
                 )
             
-            # Format results
+            # Format results and apply similarity threshold
             matches = []
             for result in search_results:
-                matches.append({
-                    'post_id': result.payload.get('post_id', result.id),  # Use payload post_id, fallback to vector ID
-                    'similarity': result.score,
-                    'payload': result.payload
-                })
+                similarity = result.score
+                
+                # Apply minimum similarity filter
+                if similarity >= min_similarity:
+                    matches.append({
+                        'post_id': result.payload.get('post_id', result.id),
+                        'similarity': similarity,
+                        'payload': result.payload
+                    })
+                else:
+                    print(f"⚠️  Filtered out: {result.payload.get('title')} - {similarity*100:.1f}% (below {min_similarity*100}%)")
             
+            print(f"✨ Found {len(matches)} matches above {min_similarity*100}% similarity")
             return matches
             
         except Exception as e:

@@ -221,6 +221,15 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               'matchesCount': result['matches_count'],
               'matches': result['matches'],
               'success': result['success'],
+              // Include user's post data for preview
+              'title': _titleController.text,
+              'description': _descriptionController.text,
+              'category': _selectedCategory,
+              'location': _locationController.text,
+              'postType': _selectedType,
+              'latitude': _selectedCoordinates?.latitude,
+              'longitude': _selectedCoordinates?.longitude,
+              'imageUrl': _selectedImage?.path ?? '',
             },
           );
         }

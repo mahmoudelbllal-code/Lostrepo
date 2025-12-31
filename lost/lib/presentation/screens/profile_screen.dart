@@ -145,7 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       iconColor: const Color(0xFF2196F3),
                       title: 'Support',
                       onTap: () {
-                        Navigator.pushNamed(context, '/notifications');
+                        // Navigator.pushNamed(pass);
                       },
                     ),
 
@@ -157,7 +157,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       iconColor: const Color(0xFF2196F3),
                       title: 'Privacy Policy',
                       onTap: () {
-                        Navigator.pushNamed(context, '/settings');
+                        // Navigator.pushNamed(context, '/settings');
                       },
                     ),
 
@@ -215,10 +215,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildNavButton(Icons.home, false, () {
               Navigator.pushReplacementNamed(context, '/home');
             }),
-            _buildNavButton(Icons.search, false, () {
-              Navigator.pushNamed(context, '/search');
-            }),
-            _buildNavButton(Icons.chat_bubble_outline, false, () {
+            
+            _buildNavButton(Icons.chat_bubble_outline_sharp, false, () {
               Navigator.pushNamed(context, '/chat');
             }),
             _buildNavButton(Icons.file_upload_outlined, false, () {

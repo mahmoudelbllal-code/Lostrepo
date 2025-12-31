@@ -538,7 +538,27 @@ class _AIMatchingResultsScreenState extends State<AIMatchingResultsScreen>
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () {
-                          // View details
+                          Navigator.pushNamed(
+                            context,
+                            '/post-detail',
+                            arguments: {
+                              'title': result.title,
+                              'category': 'Accessories',
+                              'timeAgo': result.timeAgo,
+                              'posterName': result.finderName,
+                              'isVerified': result.isVerified,
+                              'dateLost': 'Oct 24, 2023',
+                              'refId': '#8293-LM',
+                              'description': result.description,
+                              'location': result.location,
+                              'distance': result.distance,
+                              'imageUrl': result.imageUrl,
+                              'status': result.status,
+                              'matchPercentage': result.matchPercentage,
+                              'latitude': 40.7829,
+                              'longitude': -73.9654,
+                            },
+                          );
                         },
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(color: FinderColors.lightBrown),
@@ -1058,7 +1078,12 @@ class _AIMatchingResultsScreenState extends State<AIMatchingResultsScreen>
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          Navigator.pushReplacementNamed(context, '/home');
+                          // Navigate to preview post screen with the user's post data
+                          Navigator.pushNamed(
+                            context,
+                            '/preview-post',
+                            arguments: widget.postData ?? {},
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,

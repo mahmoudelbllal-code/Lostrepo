@@ -131,6 +131,11 @@ def create_post_with_matching():
         
         # Get form data
         post_type = request.form.get('type', 'lost').lower()
+        category = request.form.get('category', '').strip()
+        
+        print(f"📝 Post Details:")
+        print(f"   Type: {post_type}")
+        print(f"   Category: {category}")
         
         # Generate unique ID for temp file
         post_id = str(uuid.uuid4())
@@ -146,20 +151,32 @@ def create_post_with_matching():
         embedding = ai_service.generate_embedding(file_path)
         print(f"✅ Embedding generated: {len(embedding)} dimensions")
         
-        # Search for matches in existing static data
-        print(f"🔎 Searching for similar items in static database...")
+        # Search for matches in existing static data with category filter
+        if category:
+            print(f"🔎 Searching for similar items in '{category}' category...")
+        else:
+            print(f"🔎 Searching for similar items in static database...")
+        
         matches = vector_db_service.search_similar(
             embedding=embedding,
             post_type=post_type,
+            category=category if category else None,
             top_k=10,
             min_similarity=0.80  # 80% minimum - high quality matches only
         )
         
         # Format matches with full post details
         matching_results = []
+        print(f"📋 Processing {len(matches)} matches from vector DB...")
         for match in matches:
+            print(f"   Checking match: post_id={match.get('post_id')}, similarity={match.get('similarity')*100:.1f}%")
             match_post = posts_db.get(match['post_id'])
             if match_post:
+                print(f"   Found in posts_db: {match_post['title']} (category: {match_post.get('category')}, type: {match_post['post_type']})")
+                # Double-check category matches if category was specified
+                if category and match_post.get('category', '').lower() != category.lower():
+                    print(f"   ⚠️  Skipping {match_post['title']} - wrong category ({match_post.get('category')} vs {category})")
+                    continue
                 # Calculate time ago
                 created_at = datetime.fromisoformat(match_post['created_at'])
                 time_diff = datetime.now() - created_at
@@ -187,8 +204,11 @@ def create_post_with_matching():
                     'finder_name': 'User',
                     'is_verified': False
                 })
+                print(f"   ✅ Added to results: {match_post['title']}")
+            else:
+                print(f"   ❌ Post not found in posts_db: {match.get('post_id')}")
         
-        print(f"✨ Found {len(matching_results)} matches")
+        print(f"✨ Returning {len(matching_results)} validated matches")
         print("="*60 + "\n")
         
         # Clean up temp file

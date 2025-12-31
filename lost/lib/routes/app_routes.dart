@@ -13,6 +13,8 @@ import '../presentation/screens/notifications_screen.dart';
 import '../presentation/screens/chat_screen.dart';
 import '../presentation/screens/create_post_screen.dart';
 import '../presentation/screens/ai_matching_results_screen.dart';
+import '../presentation/screens/post_detail_screen.dart';
+import '../presentation/screens/preview_post_screen.dart';
 
 /// App Routes Configuration
 class AppRoutes {
@@ -21,6 +23,7 @@ class AppRoutes {
   static const String search = '/search';
   static const String createPost = '/create-post';
   static const String postDetail = '/post-detail';
+  static const String previewPost = '/preview-post';
   static const String profile = '/profile';
   static const String settingsRoute = '/settings';
   static const String chat = '/chat';
@@ -47,10 +50,29 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const CreatePostScreen());
 
       case postDetail:
+        final args = settings.arguments as Map<String, dynamic>?;
+        if (args == null) {
+          return MaterialPageRoute(
+            builder: (_) => const Scaffold(
+              body: Center(child: Text('No post data provided')),
+            ),
+          );
+        }
         return MaterialPageRoute(
-          builder: (_) => const Scaffold(
-            body: Center(child: Text('Post Detail Screen - Coming Soon')),
-          ),
+          builder: (_) => PostDetailScreen(postData: args),
+        );
+
+      case previewPost:
+        final args = settings.arguments as Map<String, dynamic>?;
+        if (args == null) {
+          return MaterialPageRoute(
+            builder: (_) => const Scaffold(
+              body: Center(child: Text('No post data provided')),
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => PreviewPostScreen(postData: args),
         );
 
       case aiMatchingResults:

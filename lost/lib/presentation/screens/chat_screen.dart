@@ -10,6 +10,7 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final _messageController = TextEditingController();
+  bool _hasText = false;
   final List<ChatMessage> _messages = [
     ChatMessage(
       message: 'Hi! I found your lost item. Is it still available?',
@@ -32,6 +33,16 @@ class _ChatScreenState extends State<ChatScreen> {
       time: '10:35 AM',
     ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _messageController.addListener(() {
+      setState(() {
+        _hasText = _messageController.text.trim().isNotEmpty;
+      });
+    });
+  }
 
   @override
   void dispose() {
@@ -178,14 +189,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 // Message Input Label
                 Padding(
                   padding: const EdgeInsets.only(left: 4, bottom: 8),
-                  child: Text(
-                    'Type Message',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[700],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                  
                 ),
 
                 // Message Input Field
@@ -196,7 +200,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       icon: Icon(
                         Icons.emoji_emotions_outlined,
                         color: Colors.grey[600],
-                        size: 26,
+                        size: 35,
                       ),
                       onPressed: () {
                         // TODO: Show emoji picker
@@ -242,7 +246,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // Camera Button
+                    // Camera/Send Button
                     Container(
                       width: 50,
                       height: 50,
@@ -251,14 +255,17 @@ class _ChatScreenState extends State<ChatScreen> {
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
-                        icon: const Icon(
-                          Icons.camera_alt,
+                        icon: Icon(
+                          _hasText ? Icons.send : Icons.camera_alt,
                           color: Colors.white,
-                          size: 24,
+                          size: 22,
                         ),
                         onPressed: () {
-                          // TODO: Open camera or send message
-                          _sendMessage();
+                          if (_hasText) {
+                            _sendMessage();
+                          } else {
+                            // TODO: Open camera
+                          }
                         },
                       ),
                     ),

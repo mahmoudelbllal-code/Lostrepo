@@ -51,7 +51,29 @@ class PostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.pushNamed(context, '/post-detail', arguments: post);
+        Navigator.pushNamed(
+          context,
+          '/post-detail',
+          arguments: {
+            'title': post.title,
+            'category': post.category,
+            'timeAgo': _getTimeAgo(),
+            'posterName': 'User',
+            'isVerified': false,
+            'dateLost':
+                '${post.createdAt.month}/${post.createdAt.day}/${post.createdAt.year}',
+            'refId': '#${post.id.substring(0, 8)}',
+            'description': post.description,
+            'location': post.location ?? 'Location Unknown',
+            'distance': '1.2 km away',
+            'imageUrl': post.imageUrl,
+            'status': post.postType,
+            'matchPercentage': 0,
+            // Default coordinates (Central Park, NY)
+            'latitude': 40.7829,
+            'longitude': -73.9654,
+          },
+        );
       },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

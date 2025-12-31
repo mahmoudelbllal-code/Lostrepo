@@ -23,66 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Fallback mock data (shown when backend is unavailable)
   final List<Post> _mockPosts = [
-    Post(
-      id: '1',
-      userId: 'user1',
-      title: 'Pink Quilted Wallet',
-      description: 'Found this beautiful pink wallet in Central Park',
-      category: 'Wallet',
-      postType: 'found',
-      imageUrl:
-          'https://images.unsplash.com/photo-1627123424574-724758594e93?w=500',
-      location: 'Central Park, NY',
-      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-    ),
-    Post(
-      id: '2',
-      userId: 'user2',
-      title: 'Stuffed Bear Toy',
-      description: 'Lost my child\'s favorite teddy bear at the library',
-      category: 'Other',
-      postType: 'lost',
-      imageUrl:
-          'https://images.unsplash.com/photo-1519897831810-a9a01aceccd1?w=500',
-      location: 'Main Street Library',
-      createdAt: DateTime.now().subtract(const Duration(hours: 5)),
-    ),
-    Post(
-      id: '3',
-      userId: 'user3',
-      title: 'Leather Travel Pouch',
-      description: 'Found this brown leather bag at the terminal',
-      category: 'Bag',
-      postType: 'found',
-      imageUrl:
-          'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=500',
-      location: 'Terminal 4',
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-    Post(
-      id: '4',
-      userId: 'user4',
-      title: 'Blue Backpack',
-      description: 'Found this backpack at the gym area',
-      category: 'Bag',
-      postType: 'found',
-      imageUrl:
-          'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500',
-      location: 'City Gym',
-      createdAt: DateTime.now().subtract(const Duration(days: 1, hours: 3)),
-    ),
-    Post(
-      id: '5',
-      userId: 'user5',
-      title: 'iPhone with Red Case',
-      description: 'Lost my iPhone 13 with a red silicone case',
-      category: 'Phone',
-      postType: 'lost',
-      imageUrl:
-          'https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=500',
-      location: 'Starbucks Times Square',
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-    ),
+   
   ];
 
   @override
@@ -284,19 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                      size: 20,
-                      color: Colors.grey[600],
-                    ),
-                  ),
+                  
                 ],
               ),
             ),
